@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLACKY X PREDICTOR</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+      color: #fff;
+    }
+
+    body {
+      background: linear-gradient(45deg, #1a1a1a, #000000);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .outer-container {
+      width: 95%;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 20px;
+      position: relative;
+      background-color: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      z-index: 1;
+    }
+
+    .inner-container {
+      padding: 25px;
+      border-radius: 20px;
+      border: 2px solid #66b3ff;
+      box-shadow: 0 0 25px #66b3ff, 0 0 5px #4da6ff inset;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .textview {
+      font-size: 22px;
+      margin: 12px 0;
+      padding: 12px 15px;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, 0.08);
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .listview {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 15px;
+      background-color: rgba(255, 255, 255, 0.05);
+      text-align: left;
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 0 15px #66b3ff;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .listview::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .listview::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+
+    .listview::-webkit-scrollbar-thumb {
+      background: #4da6ff;
+      border-radius: 4px;
+    }
+
+    .listview li {
+      padding: 10px;
+      margin: 8px 0;
+      background-color: rgba(0, 153, 255, 0.1);
+      border-radius: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #textview1 {
+      font-size: 28px;
+      font-weight: bold;
+      color: #b3d9ff;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px #80c1ff;
+    }
+
+    .futuristic-glow {
+      text-shadow: 0 0 10px #0099ff, 0 0 20px #33bbff;
+    }
+
+    .emphasized-text {
+      font-weight: bold;
+      color: #a3ccff;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      color: #888;
+      font-size: 12px;
+      z-index: 2;
+      opacity: 0.7;
+    }
+
+    .timer-pulse {
+      animation: pulse 2s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(1.05);
+      }
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .styled-table th,
+    .styled-table td {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px;
+      text-align: center;
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .styled-table th {
+      background-color: rgba(0, 153, 255, 0.2);
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="bg-particles"></canvas>
+  <div class="outer-container">
+    <div class="inner-container">
+      <div id="textview1" class="textview futuristic-glow">BLACKY X PREDICTOR</div>
+      <div id="textview2" class="textview">Loading...</div>
+      <div id="textview3" class="textview timer-pulse">00:00</div>
+      <div id="textview4" class="textview">Predicted Result: --</div>
+
+      <!-- Image 1 Numbers -->
+      <div class="textview">
+        <h3>Image 1 Numbers</h3>
+        <table id="table1" class="styled-table">
+          <thead><tr><th>Number</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Image 2 Numbers -->
+      <div class="textview">
+        <h3>Image 2 Numbers</h3>
+        <table id="table2" class="styled-table">
+          <thead><tr><th>Number</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <ul id="history" class="listview"></ul>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Blacky Predictor. All rights reserved.</p>
+  </footer>
+
+  <script>
+    const RESULTS = ["4", "1", "7", "3", "9", "2", "0", "8", "5", "6"];
+    let lastPeriod = "";
+
+    function getDeterministicResult(period) {
+      const hash = period.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return RESULTS[hash % RESULTS.length];
+    }
+
+    function updateTimerAndPeriod() {
+      const now = new Date();
+      const seconds = now.getUTCSeconds();
+      const remainingSeconds = 60 - seconds;
+      const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+      const period = new Date().toISOString().slice(0, 10).replace(/-/g, '') + "1000" + (10001 + minutes);
+
+      document.getElementById("textview2").innerText = period;
+      document.getElementById("textview3").innerText = `00 : ${String(remainingSeconds).padStart(2, '0')}`;
+
+      if (lastPeriod !== period) {
+        lastPeriod = period;
+        updateResult(period);
+      }
+    }
+
+    function updateResult(period) {
+      const resultValue = getDeterministicResult(period);
+
+      document.getElementById("textview4").innerHTML = `Predicted Result: <span class="emphasized-text">${resultValue}</span>`;
+
+      const historyList = document.getElementById("history");
+      const listItem = document.createElement("li");
+      listItem.innerHTML = `Period: <span class="emphasized-text">${period}</span> → <span class="emphasized-text">${resultValue}</span>`;
+      historyList.prepend(listItem);
+    }
+
+    setInterval(updateTimerAndPeriod, 1000);
+
+    // Particle background
+    const canvas = document.getElementById('bg-particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function createParticles() {
+      particles = Array.from({ length: 80 }).map(() => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2 + 1,
+        dx: (Math.random() - 0.5) * 1.5,
+        dy: (Math.random() - 0.5) * 1.5
+      }));
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = "#00ffff88";
+        ctx.fill();
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    createParticles();
+    animateParticles();
+
+    // Number data for each image
+    const image1Numbers = [7, 1, 9, 3, 7, 6, 3, 6, 1, 4];
+    const image2Numbers = [2, 7, 5, 4, 8, 2, 5, 9, 7, 8];
+
+    function populateTable(tableId, numbers) {
+      const tableBody = document.querySelector(`#${tableId} tbody`);
+      numbers.forEach(number => {
+        const row = tableBody.insertRow();
+        const cell = row.insertCell();
+        cell.textContent = number;
+      });
+    }
+
+    populateTable("table1", image1Numbers);
+    populateTable("table2", image2Numbers);
+  </script>
+</body>
+</html>
